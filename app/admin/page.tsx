@@ -1,34 +1,58 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Save, History } from "lucide-react"
-import Link from "next/link"
-import { DatePicker } from "@/components/date-picker"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { VersionHistory } from "@/components/version-history"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Save, History, Plus, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { DatePicker } from "@/components/date-picker";
+import { createClient } from "@/lib/supabase/client";
 
 interface Release {
-  id: string
-  product_name: string
-  dev_end_date: string
-  qa_end_date: string
-  release_date: string
-  version: string
-  release_notes?: string // Added release_notes field
+  id: string;
+  product_name: string;
+  dev_end_date: string;
+  qa_end_date: string;
+  release_date: string;
+  version: string;
+}
+
+interface VersionHistoryEntry {
+  id: string;
+  version: string;
+  product_name: string;
+  dev_end_date: string;
+  qa_end_date: string;
+  release_date: string;
+  changed_by: string | null;
+  changed_at: string;
+  change_note: string | null;
+  release_notes: string | null;
 }
 
 export default function AdminPage() {
-  const [releases, setReleases] = useState<Release[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [selectedProduct, setSelectedProduct] = useState<string>("")
-  const [showHistory, setShowHistory] = useState<string | null>(null)
+  const [releases, setReleases] = useState<Release[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showHistory, setShowHistory] = useState<string | null>(null);
+  const [versionHistories, setVersionHistories] = useState<
+    Record<string, VersionHistoryEntry[]>
+  >({});
+  const [selectedVersion, setSelectedVersion] = useState<{
+    releaseId: string;
+    versionData: VersionHistoryEntry | null;
+    isNewVersion: boolean;
+  } | null>(null);
   const [formData, setFormData] = useState({
     product_name: "",
     dev_end_date: "",
@@ -36,117 +60,309 @@ export default function AdminPage() {
     release_date: "",
     version: "",
     change_note: "",
-    release_notes: "", // Added release_notes to form data
-  })
+    release_notes: "",
+  });
 
-  const [devEndDate, setDevEndDate] = useState<Date | undefined>()
-  const [qaEndDate, setQaEndDate] = useState<Date | undefined>()
-  const [releaseDate, setReleaseDate] = useState<Date | undefined>()
-
-  useEffect(() => {
-    fetchReleases()
-  }, [])
+  const [devEndDate, setDevEndDate] = useState<Date | undefined>();
+  const [qaEndDate, setQaEndDate] = useState<Date | undefined>();
+  const [releaseDate, setReleaseDate] = useState<Date | undefined>();
 
   useEffect(() => {
-    if (selectedProduct) {
-      const release = releases.find((r) => r.product_name === selectedProduct)
-      if (release) {
-        setFormData({
-          product_name: release.product_name,
-          dev_end_date: release.dev_end_date,
-          qa_end_date: release.qa_end_date,
-          release_date: release.release_date,
-          version: release.version || "1.0.0",
-          change_note: "",
-          release_notes: release.release_notes || "", // Added release_notes
-        })
-        setDevEndDate(new Date(release.dev_end_date))
-        setQaEndDate(new Date(release.qa_end_date))
-        setReleaseDate(new Date(release.release_date))
-      } else {
-        setFormData({
-          product_name: selectedProduct,
-          dev_end_date: "",
-          qa_end_date: "",
-          release_date: "",
-          version: "1.0.0",
-          change_note: "",
-          release_notes: "", // Added release_notes
-        })
-        setDevEndDate(undefined)
-        setQaEndDate(undefined)
-        setReleaseDate(undefined)
-      }
-    }
-  }, [selectedProduct, releases])
+    fetchReleases();
+  }, []);
 
   useEffect(() => {
     if (devEndDate) {
-      setFormData((prev) => ({ ...prev, dev_end_date: devEndDate.toISOString().split("T")[0] }))
+      setFormData((prev) => ({
+        ...prev,
+        dev_end_date: devEndDate.toISOString().split("T")[0],
+      }));
     }
-  }, [devEndDate])
+  }, [devEndDate]);
 
   useEffect(() => {
     if (qaEndDate) {
-      setFormData((prev) => ({ ...prev, qa_end_date: qaEndDate.toISOString().split("T")[0] }))
+      setFormData((prev) => ({
+        ...prev,
+        qa_end_date: qaEndDate.toISOString().split("T")[0],
+      }));
     }
-  }, [qaEndDate])
+  }, [qaEndDate]);
 
   useEffect(() => {
     if (releaseDate) {
-      setFormData((prev) => ({ ...prev, release_date: releaseDate.toISOString().split("T")[0] }))
+      setFormData((prev) => ({
+        ...prev,
+        release_date: releaseDate.toISOString().split("T")[0],
+      }));
     }
-  }, [releaseDate])
+  }, [releaseDate]);
 
   const fetchReleases = async () => {
     try {
-      const response = await fetch("/api/releases")
-      const data = await response.json()
-      setReleases(data)
+      const response = await fetch("/api/releases");
+      const data = await response.json();
+      setReleases(data);
     } catch (error) {
-      console.error("Failed to fetch releases:", error)
+      console.error("Failed to fetch releases:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!selectedProduct) {
-      alert("제품을 선택해주세요")
-      return
+  const fetchVersionHistory = async (releaseId: string, force = false) => {
+    if (!force && versionHistories[releaseId]) {
+      return; // Already fetched
     }
 
     try {
-      const existingRelease = releases.find((r) => r.product_name === selectedProduct)
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("version_history")
+        .select("*")
+        .eq("release_id", releaseId)
+        .order("changed_at", { ascending: false });
 
-      if (existingRelease) {
-        // Update existing product
-        const response = await fetch(`/api/releases/${existingRelease.id}`, {
+      if (error) {
+        console.error("Failed to fetch version history:", error);
+        return;
+      }
+
+      setVersionHistories((prev) => ({
+        ...prev,
+        [releaseId]: data || [],
+      }));
+    } catch (error) {
+      console.error("Failed to fetch version history:", error);
+    }
+  };
+
+  const handleHistoryToggle = (releaseId: string) => {
+    if (showHistory === releaseId) {
+      setShowHistory(null);
+    } else {
+      setShowHistory(releaseId);
+      fetchVersionHistory(releaseId);
+    }
+  };
+
+  const handleVersionClick = (
+    releaseId: string,
+    versionData: VersionHistoryEntry
+  ) => {
+    const release = releases.find((r) => r.id === releaseId);
+    if (!release) return;
+
+    setSelectedVersion({
+      releaseId,
+      versionData,
+      isNewVersion: false,
+    });
+
+    setFormData({
+      product_name: release.product_name,
+      dev_end_date: versionData.dev_end_date,
+      qa_end_date: versionData.qa_end_date,
+      release_date: versionData.release_date,
+      version: versionData.version,
+      change_note: versionData.change_note || "",
+      release_notes: versionData.release_notes || "",
+    });
+
+    setDevEndDate(new Date(versionData.dev_end_date));
+    setQaEndDate(new Date(versionData.qa_end_date));
+    setReleaseDate(new Date(versionData.release_date));
+  };
+
+  const handleAddNewVersion = (releaseId: string) => {
+    const release = releases.find((r) => r.id === releaseId);
+    if (!release) return;
+
+    setSelectedVersion({
+      releaseId,
+      versionData: null,
+      isNewVersion: true,
+    });
+
+    setFormData({
+      product_name: release.product_name,
+      dev_end_date: "",
+      qa_end_date: "",
+      release_date: "",
+      version: "",
+      change_note: "",
+      release_notes: "",
+    });
+
+    setDevEndDate(undefined);
+    setQaEndDate(undefined);
+    setReleaseDate(undefined);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!selectedVersion) {
+      alert("버전을 선택해주세요");
+      return;
+    }
+
+    if (
+      !formData.version ||
+      !formData.dev_end_date ||
+      !formData.qa_end_date ||
+      !formData.release_date
+    ) {
+      alert("모든 필드를 입력해주세요");
+      return;
+    }
+
+    try {
+      // 1. Update releases table
+      const releaseResponse = await fetch(
+        `/api/releases/${selectedVersion.releaseId}`,
+        {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        })
-
-        if (response.ok) {
-          await fetchReleases()
-          setFormData((prev) => ({ ...prev, change_note: "" }))
-          alert("일정이 업데이트되었습니다")
+          body: JSON.stringify({
+            product_name: formData.product_name,
+            dev_end_date: formData.dev_end_date,
+            qa_end_date: formData.qa_end_date,
+            release_date: formData.release_date,
+            version: formData.version,
+          }),
         }
+      );
+
+      if (!releaseResponse.ok) {
+        throw new Error("Failed to update release");
+      }
+
+      // 2. Update or Insert version history
+      let versionHistoryResponse;
+      if (selectedVersion.isNewVersion) {
+        // Insert new version history
+        versionHistoryResponse = await fetch("/api/version-history", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            release_id: selectedVersion.releaseId,
+            version: formData.version,
+            product_name: formData.product_name,
+            dev_end_date: formData.dev_end_date,
+            qa_end_date: formData.qa_end_date,
+            release_date: formData.release_date,
+            release_notes: formData.release_notes || null,
+            change_note: formData.change_note || null,
+          }),
+        });
+      } else {
+        // Update existing version history
+        versionHistoryResponse = await fetch(
+          `/api/version-history/${selectedVersion.versionData?.id}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              version: formData.version,
+              product_name: formData.product_name,
+              dev_end_date: formData.dev_end_date,
+              qa_end_date: formData.qa_end_date,
+              release_date: formData.release_date,
+              release_notes: formData.release_notes || null,
+              change_note: formData.change_note || null,
+            }),
+          }
+        );
+      }
+
+      if (!versionHistoryResponse.ok) {
+        throw new Error("Failed to save version history");
+      }
+
+      // Success - refresh and reset
+      await fetchReleases();
+      await fetchVersionHistory(selectedVersion.releaseId, true);
+      setShowHistory(selectedVersion.releaseId); // 히스토리를 열어둠
+      setSelectedVersion(null);
+      setFormData({
+        product_name: "",
+        dev_end_date: "",
+        qa_end_date: "",
+        release_date: "",
+        version: "",
+        change_note: "",
+        release_notes: "",
+      });
+      setDevEndDate(undefined);
+      setQaEndDate(undefined);
+      setReleaseDate(undefined);
+      alert("일정이 업데이트되었습니다");
+    } catch (error) {
+      console.error("Failed to save release:", error);
+      alert("저장에 실패했습니다");
+    }
+  };
+
+  const handleCancel = () => {
+    setSelectedVersion(null);
+    setFormData({
+      product_name: "",
+      dev_end_date: "",
+      qa_end_date: "",
+      release_date: "",
+      version: "",
+      change_note: "",
+      release_notes: "",
+    });
+    setDevEndDate(undefined);
+    setQaEndDate(undefined);
+    setReleaseDate(undefined);
+  };
+
+  const handleDeleteVersion = async (
+    releaseId: string,
+    versionHistoryId: string,
+    versionName: string
+  ) => {
+    if (
+      !confirm(
+        `버전 ${versionName}을(를) 삭제하시겠습니까?\n이 작업은 취소할 수 없습니다.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/version-history/${versionHistoryId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        // Refresh version history
+        await fetchVersionHistory(releaseId, true);
+
+        // If the deleted version was selected, clear the form
+        if (selectedVersion?.versionData?.id === versionHistoryId) {
+          handleCancel();
+        }
+
+        alert("버전 히스토리가 삭제되었습니다");
+      } else {
+        throw new Error("Failed to delete");
       }
     } catch (error) {
-      console.error("Failed to save release:", error)
-      alert("저장에 실패했습니다")
+      console.error("Failed to delete version history:", error);
+      alert("삭제에 실패했습니다");
     }
-  }
+  };
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <p className="text-lg">로딩 중...</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -158,103 +374,14 @@ export default function AdminPage() {
             <p className="text-gray-400">제품 릴리즈 일정을 관리합니다</p>
           </div>
           <Link href="/">
-            <Button variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10">
+            <Button
+              variant="outline"
+              className="bg-white/5 border-white/10 hover:bg-white/10"
+            >
               전광판 보기
             </Button>
           </Link>
         </div>
-
-        <Card className="bg-white/5 border-white/10">
-          <CardHeader>
-            <CardTitle className="text-white">일정 수정</CardTitle>
-            <CardDescription className="text-gray-400">제품을 선택하고 각 단계의 날짜를 입력하세요</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="product_name" className="text-white">
-                    제품명
-                  </Label>
-                  <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-                    <SelectTrigger className="bg-white/5 border-white/10 text-white w-full">
-                      <SelectValue placeholder="제품 선택" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {releases.map((release) => (
-                        <SelectItem key={release.id} value={release.product_name}>
-                          {release.product_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="version" className="text-white">
-                    버전
-                  </Label>
-                  <Input
-                    id="version"
-                    value={formData.version}
-                    onChange={(e) => setFormData({ ...formData, version: e.target.value })}
-                    placeholder="예: 1.0.0"
-                    className="bg-white/5 border-white/10 text-white"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="dev_end_date" className="text-white">
-                    개발 종료일
-                  </Label>
-                  <DatePicker date={devEndDate} onDateChange={setDevEndDate} placeholder="개발 종료일 선택" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="qa_end_date" className="text-white">
-                    QA 종료일
-                  </Label>
-                  <DatePicker date={qaEndDate} onDateChange={setQaEndDate} placeholder="QA 종료일 선택" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="release_date" className="text-white">
-                    최종 릴리즈일
-                  </Label>
-                  <DatePicker date={releaseDate} onDateChange={setReleaseDate} placeholder="최종 릴리즈일 선택" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="change_note" className="text-white">
-                  변경 사항 메모 (선택사항)
-                </Label>
-                <Textarea
-                  id="change_note"
-                  value={formData.change_note}
-                  onChange={(e) => setFormData({ ...formData, change_note: e.target.value })}
-                  placeholder="이번 업데이트의 변경 사항을 기록하세요"
-                  className="bg-white/5 border-white/10 text-white"
-                  rows={3}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="release_notes" className="text-white">
-                  릴리즈 노트 (전광판에 표시됨)
-                </Label>
-                <Textarea
-                  id="release_notes"
-                  value={formData.release_notes}
-                  onChange={(e) => setFormData({ ...formData, release_notes: e.target.value })}
-                  placeholder="이번 버전에 포함된 주요 기능과 변경사항을 입력하세요"
-                  className="bg-white/5 border-white/10 text-white"
-                  rows={4}
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button type="submit" className="bg-white text-black hover:bg-gray-200" disabled={!selectedProduct}>
-                  <Save className="w-4 h-4 mr-2" />
-                  저장
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
 
         <div className="space-y-4">
           <h2 className="text-2xl font-bold">등록된 릴리즈</h2>
@@ -264,7 +391,9 @@ export default function AdminPage() {
                 <CardContent className="p-6">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-xl font-bold text-white">{release.product_name}</h3>
+                      <h3 className="text-xl font-bold text-white">
+                        {release.product_name}
+                      </h3>
                       <div className="flex items-center gap-2">
                         <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm font-medium">
                           {release.version || "1.0.0"}
@@ -272,11 +401,20 @@ export default function AdminPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setShowHistory(showHistory === release.id ? null : release.id)}
+                          onClick={() => handleHistoryToggle(release.id)}
                           className="bg-white/5 border-white/10 hover:bg-white/10"
                         >
                           <History className="w-4 h-4 mr-1" />
                           히스토리
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleAddNewVersion(release.id)}
+                          className="bg-white/5 border-white/10 hover:bg-white/10"
+                        >
+                          <Plus className="w-4 h-4 mr-1" />
+                          추가
                         </Button>
                       </div>
                     </div>
@@ -284,30 +422,253 @@ export default function AdminPage() {
                       <div>
                         <p className="text-gray-400">개발 종료</p>
                         <p className="text-white font-medium">
-                          {new Date(release.dev_end_date).toLocaleDateString("ko-KR")}
+                          {new Date(release.dev_end_date).toLocaleDateString(
+                            "ko-KR"
+                          )}
                         </p>
                       </div>
                       <div>
                         <p className="text-gray-400">QA 종료</p>
                         <p className="text-white font-medium">
-                          {new Date(release.qa_end_date).toLocaleDateString("ko-KR")}
+                          {new Date(release.qa_end_date).toLocaleDateString(
+                            "ko-KR"
+                          )}
                         </p>
                       </div>
                       <div>
                         <p className="text-gray-400">최종 릴리즈</p>
                         <p className="text-white font-medium">
-                          {new Date(release.release_date).toLocaleDateString("ko-KR")}
+                          {new Date(release.release_date).toLocaleDateString(
+                            "ko-KR"
+                          )}
                         </p>
                       </div>
                     </div>
-                    {showHistory === release.id && <VersionHistory releaseId={release.id} />}
+                    {showHistory === release.id && (
+                      <div className="mt-4 space-y-3">
+                        <h4 className="text-sm font-semibold text-gray-300">
+                          버전 히스토리
+                        </h4>
+                        {versionHistories[release.id] &&
+                        versionHistories[release.id].length > 0 ? (
+                          <div className="space-y-2 max-h-96 overflow-y-auto">
+                            {versionHistories[release.id].map((entry) => (
+                              <Card
+                                key={entry.id}
+                                className="bg-white/5 border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
+                                onClick={() =>
+                                  handleVersionClick(release.id, entry)
+                                }
+                              >
+                                <CardContent className="p-4">
+                                  <div className="flex items-start justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                      <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs font-medium">
+                                        {entry.version}
+                                      </span>
+                                      <span className="text-xs text-gray-400">
+                                        {new Date(
+                                          entry.changed_at
+                                        ).toLocaleString("ko-KR")}
+                                      </span>
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteVersion(
+                                          release.id,
+                                          entry.id,
+                                          entry.version
+                                        );
+                                      }}
+                                      className="h-6 w-6 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                  <div className="grid grid-cols-3 gap-2 text-xs mb-2">
+                                    <div>
+                                      <span className="text-gray-400">
+                                        개발:{" "}
+                                      </span>
+                                      <span className="text-white">
+                                        {new Date(
+                                          entry.dev_end_date
+                                        ).toLocaleDateString("ko-KR")}
+                                      </span>
+                                    </div>
+                                    <div>
+                                      <span className="text-gray-400">
+                                        QA:{" "}
+                                      </span>
+                                      <span className="text-white">
+                                        {new Date(
+                                          entry.qa_end_date
+                                        ).toLocaleDateString("ko-KR")}
+                                      </span>
+                                    </div>
+                                    <div>
+                                      <span className="text-gray-400">
+                                        릴리즈:{" "}
+                                      </span>
+                                      <span className="text-white">
+                                        {new Date(
+                                          entry.release_date
+                                        ).toLocaleDateString("ko-KR")}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  {entry.change_note && (
+                                    <p className="text-sm text-gray-300 mt-2 p-2 bg-white/5 rounded">
+                                      {entry.change_note}
+                                    </p>
+                                  )}
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-gray-400 text-sm">
+                            변경 이력이 없습니다.
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         </div>
+
+        {selectedVersion && (
+          <Card className="bg-white/5 border-white/10">
+            <CardHeader>
+              <CardTitle className="text-white">
+                {selectedVersion.isNewVersion ? "새 버전 추가" : "일정 수정"}
+              </CardTitle>
+              <CardDescription className="text-gray-400">
+                {selectedVersion.isNewVersion
+                  ? "새로운 버전의 일정을 입력하세요"
+                  : "선택한 버전의 일정을 수정하세요"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="product_name" className="text-white">
+                      제품명
+                    </Label>
+                    <Input
+                      id="product_name"
+                      value={formData.product_name}
+                      disabled
+                      className="bg-white/5 border-white/10 text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="version" className="text-white">
+                      버전
+                    </Label>
+                    <Input
+                      id="version"
+                      value={formData.version}
+                      onChange={(e) =>
+                        setFormData({ ...formData, version: e.target.value })
+                      }
+                      placeholder="예: 1.0.0"
+                      className="bg-white/5 border-white/10 text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="dev_end_date" className="text-white">
+                      개발 종료일
+                    </Label>
+                    <DatePicker
+                      date={devEndDate}
+                      onDateChange={setDevEndDate}
+                      placeholder="개발 종료일 선택"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="qa_end_date" className="text-white">
+                      QA 종료일
+                    </Label>
+                    <DatePicker
+                      date={qaEndDate}
+                      onDateChange={setQaEndDate}
+                      placeholder="QA 종료일 선택"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="release_date" className="text-white">
+                      최종 릴리즈일
+                    </Label>
+                    <DatePicker
+                      date={releaseDate}
+                      onDateChange={setReleaseDate}
+                      placeholder="최종 릴리즈일 선택"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="change_note" className="text-white">
+                    변경 사항 메모 (선택사항)
+                  </Label>
+                  <Textarea
+                    id="change_note"
+                    value={formData.change_note}
+                    onChange={(e) =>
+                      setFormData({ ...formData, change_note: e.target.value })
+                    }
+                    placeholder="이번 업데이트의 변경 사항을 기록하세요"
+                    className="bg-white/5 border-white/10 text-white"
+                    rows={3}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="release_notes" className="text-white">
+                    릴리즈 노트 (전광판에 표시됨)
+                  </Label>
+                  <Textarea
+                    id="release_notes"
+                    value={formData.release_notes}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        release_notes: e.target.value,
+                      })
+                    }
+                    placeholder="이번 버전에 포함된 주요 기능과 변경사항을 입력하세요"
+                    className="bg-white/5 border-white/10 text-white"
+                    rows={4}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="submit"
+                    className="bg-white text-black hover:bg-gray-200"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    저장
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCancel}
+                    className="bg-white/5 border-white/10 hover:bg-white/10"
+                  >
+                    취소
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
-  )
+  );
 }

@@ -10,15 +10,22 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
-    const { product_name, dev_end_date, qa_end_date, release_date, version } =
-      body;
+    const {
+      version,
+      product_name,
+      dev_end_date,
+      qa_end_date,
+      release_date,
+      release_notes,
+      change_note,
+    } = body;
 
     if (
+      !version ||
       !product_name ||
       !dev_end_date ||
       !qa_end_date ||
-      !release_date ||
-      !version
+      !release_date
     ) {
       return NextResponse.json(
         { error: "Missing required fields" },
@@ -26,38 +33,35 @@ export async function PUT(
       );
     }
 
-    // Update releases table
     const { data, error } = await supabase
-      .from("releases")
+      .from("version_history")
       .update({
+        version,
         product_name,
         dev_end_date,
         qa_end_date,
         release_date,
-        version,
+        release_notes: release_notes || null,
+        change_note: change_note || null,
       })
       .eq("id", id)
-      .select(
-        "id, product_name, dev_end_date, qa_end_date, release_date, version, created_at, updated_at"
-      );
+      .select();
 
     if (error) {
-      console.error("Releases table update error:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     if (!data || data.length === 0) {
-      return NextResponse.json({ error: "Release not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Version history not found" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json(data[0]);
   } catch (error) {
-    console.error("Error in PUT /api/releases/[id]:", error);
     return NextResponse.json(
-      {
-        error: "Failed to update release",
-        details: error instanceof Error ? error.message : String(error),
-      },
+      { error: "Failed to update version history" },
       { status: 500 }
     );
   }
@@ -71,16 +75,21 @@ export async function DELETE(
     const supabase = await createClient();
     const { id } = await params;
 
-    const { error } = await supabase.from("releases").delete().eq("id", id);
+    const { error } = await supabase
+      .from("version_history")
+      .delete()
+      .eq("id", id);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ message: "Release deleted successfully" });
+    return NextResponse.json({
+      message: "Version history deleted successfully",
+    });
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to delete release" },
+      { error: "Failed to delete version history" },
       { status: 500 }
     );
   }
