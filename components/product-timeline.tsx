@@ -198,31 +198,46 @@ export function ProductTimeline({ product }: ProductTimelineProps) {
             / {milestones.length}
           </span>
         </div>
-        {product.releaseNotes && (
-          <div className="mt-4 pt-4 border-t border-border">
-            <h4 className="text-sm font-medium text-muted-foreground mb-2">
-              이번 버전
-            </h4>
-            <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent hover:scrollbar-thumb-muted-foreground/50 rounded">
-              <div className="space-y-2 pr-2">
-                {parseReleaseNotes(product.releaseNotes).map((item, index) => (
-                  <div
-                    key={index}
-                    className={`text-sm ${
-                      item.isNumbered
-                        ? "p-2 rounded-md bg-muted/30 border-l-2 border-primary/40 hover:bg-muted/50 transition-colors"
-                        : ""
-                    }`}
-                  >
-                    <p className="text-foreground whitespace-pre-wrap leading-relaxed">
-                      {item.content}
-                    </p>
+        {product.releaseNotes &&
+          (() => {
+            const parsedItems = parseReleaseNotes(product.releaseNotes);
+            const numberedItemsCount = parsedItems.filter(
+              (item) => item.isNumbered
+            ).length;
+
+            return (
+              <div className="mt-4 pt-4 border-t border-border">
+                <div className="flex items-center gap-2 mb-2">
+                  <h4 className="text-sm font-medium text-muted-foreground">
+                    이번 버전
+                  </h4>
+                  {numberedItemsCount > 0 && (
+                    <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-semibold text-primary bg-primary/10 rounded-full">
+                      {numberedItemsCount}
+                    </span>
+                  )}
+                </div>
+                <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent hover:scrollbar-thumb-muted-foreground/50 rounded">
+                  <div className="space-y-2 pr-2">
+                    {parsedItems.map((item, index) => (
+                      <div
+                        key={index}
+                        className={`text-sm ${
+                          item.isNumbered
+                            ? "p-2 rounded-md bg-muted/30 border-l-2 border-primary/40 hover:bg-muted/50 transition-colors"
+                            : ""
+                        }`}
+                      >
+                        <p className="text-foreground whitespace-pre-wrap leading-relaxed">
+                          {item.content}
+                        </p>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
-          </div>
-        )}
+            );
+          })()}
       </div>
     </Card>
   );
