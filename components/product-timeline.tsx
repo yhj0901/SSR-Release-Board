@@ -24,6 +24,45 @@ export function ProductTimeline({ product }: ProductTimelineProps) {
     });
   };
 
+  const parseReleaseNotes = (notes: string) => {
+    // 숫자로 시작하는 라인을 개별 항목으로 분리
+    const lines = notes.split("\n");
+    const items: { content: string; isNumbered: boolean }[] = [];
+    let currentItem = "";
+    let isNumbered = false;
+
+    lines.forEach((line) => {
+      const trimmedLine = line.trim();
+      // 숫자. 패턴으로 시작하는지 확인 (예: "1. ", "12. ")
+      const numberedPattern = /^\d+\.\s/;
+
+      if (numberedPattern.test(trimmedLine)) {
+        // 이전 항목이 있으면 저장
+        if (currentItem) {
+          items.push({ content: currentItem, isNumbered });
+        }
+        // 새 항목 시작
+        currentItem = trimmedLine;
+        isNumbered = true;
+      } else if (trimmedLine) {
+        // 연속된 내용 추가
+        currentItem += (currentItem ? "\n" : "") + trimmedLine;
+      } else if (currentItem && !trimmedLine) {
+        // 빈 줄이면 항목 종료
+        items.push({ content: currentItem, isNumbered });
+        currentItem = "";
+        isNumbered = false;
+      }
+    });
+
+    // 마지막 항목 추가
+    if (currentItem) {
+      items.push({ content: currentItem, isNumbered });
+    }
+
+    return items;
+  };
+
   const getPhaseStatus = (
     currentIndex: number,
     dateString: string,
@@ -165,9 +204,22 @@ export function ProductTimeline({ product }: ProductTimelineProps) {
               이번 버전
             </h4>
             <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent hover:scrollbar-thumb-muted-foreground/50 rounded">
-              <p className="text-sm text-foreground whitespace-pre-wrap pr-2">
-                {product.releaseNotes}
-              </p>
+              <div className="space-y-2 pr-2">
+                {parseReleaseNotes(product.releaseNotes).map((item, index) => (
+                  <div
+                    key={index}
+                    className={`text-sm ${
+                      item.isNumbered
+                        ? "p-2 rounded-md bg-muted/30 border-l-2 border-primary/40 hover:bg-muted/50 transition-colors"
+                        : ""
+                    }`}
+                  >
+                    <p className="text-foreground whitespace-pre-wrap leading-relaxed">
+                      {item.content}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
