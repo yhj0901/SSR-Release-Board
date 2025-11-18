@@ -359,27 +359,24 @@ export default function AdminPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <p className="text-lg">로딩 중...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-8">
+    <div className="min-h-screen bg-background text-foreground p-8">
       <div className="max-w-6xl mx-auto space-y-8">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-4xl font-bold mb-2">릴리즈 관리</h1>
-            <p className="text-gray-400">제품 릴리즈 일정을 관리합니다</p>
+            <p className="text-muted-foreground">
+              제품 릴리즈 일정을 관리합니다
+            </p>
           </div>
           <Link href="/">
-            <Button
-              variant="outline"
-              className="bg-white/5 border-white/10 hover:bg-white/10"
-            >
-              전광판 보기
-            </Button>
+            <Button variant="outline">전광판 보기</Button>
           </Link>
         </div>
 
@@ -387,22 +384,21 @@ export default function AdminPage() {
           <h2 className="text-2xl font-bold">등록된 릴리즈</h2>
           <div className="grid gap-4">
             {releases.map((release) => (
-              <Card key={release.id} className="bg-white/5 border-white/10">
+              <Card key={release.id} className="bg-card border-border">
                 <CardContent className="p-6">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-xl font-bold text-white">
+                      <h3 className="text-xl font-bold text-foreground">
                         {release.product_name}
                       </h3>
                       <div className="flex items-center gap-2">
-                        <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm font-medium">
+                        <span className="px-3 py-1 bg-blue-100 text-blue-600 rounded-full text-sm font-medium">
                           {release.version || "1.0.0"}
                         </span>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleHistoryToggle(release.id)}
-                          className="bg-white/5 border-white/10 hover:bg-white/10"
                         >
                           <History className="w-4 h-4 mr-1" />
                           히스토리
@@ -411,7 +407,6 @@ export default function AdminPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleAddNewVersion(release.id)}
-                          className="bg-white/5 border-white/10 hover:bg-white/10"
                         >
                           <Plus className="w-4 h-4 mr-1" />
                           추가
@@ -420,24 +415,24 @@ export default function AdminPage() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                       <div>
-                        <p className="text-gray-400">개발 종료</p>
-                        <p className="text-white font-medium">
+                        <p className="text-muted-foreground">개발 종료</p>
+                        <p className="text-foreground font-medium">
                           {new Date(release.dev_end_date).toLocaleDateString(
                             "ko-KR"
                           )}
                         </p>
                       </div>
                       <div>
-                        <p className="text-gray-400">QA 종료</p>
-                        <p className="text-white font-medium">
+                        <p className="text-muted-foreground">QA 종료</p>
+                        <p className="text-foreground font-medium">
                           {new Date(release.qa_end_date).toLocaleDateString(
                             "ko-KR"
                           )}
                         </p>
                       </div>
                       <div>
-                        <p className="text-gray-400">최종 릴리즈</p>
-                        <p className="text-white font-medium">
+                        <p className="text-muted-foreground">최종 릴리즈</p>
+                        <p className="text-foreground font-medium">
                           {new Date(release.release_date).toLocaleDateString(
                             "ko-KR"
                           )}
@@ -446,7 +441,7 @@ export default function AdminPage() {
                     </div>
                     {showHistory === release.id && (
                       <div className="mt-4 space-y-3">
-                        <h4 className="text-sm font-semibold text-gray-300">
+                        <h4 className="text-sm font-semibold text-muted-foreground">
                           버전 히스토리
                         </h4>
                         {versionHistories[release.id] &&
@@ -455,7 +450,7 @@ export default function AdminPage() {
                             {versionHistories[release.id].map((entry) => (
                               <Card
                                 key={entry.id}
-                                className="bg-white/5 border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
+                                className="bg-muted/30 border-border cursor-pointer hover:bg-muted/50 transition-colors"
                                 onClick={() =>
                                   handleVersionClick(release.id, entry)
                                 }
@@ -463,10 +458,10 @@ export default function AdminPage() {
                                 <CardContent className="p-4">
                                   <div className="flex items-start justify-between mb-2">
                                     <div className="flex items-center gap-2">
-                                      <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs font-medium">
+                                      <span className="px-2 py-1 bg-blue-100 text-blue-600 rounded text-xs font-medium">
                                         {entry.version}
                                       </span>
-                                      <span className="text-xs text-gray-400">
+                                      <span className="text-xs text-muted-foreground">
                                         {new Date(
                                           entry.changed_at
                                         ).toLocaleString("ko-KR")}
@@ -483,37 +478,37 @@ export default function AdminPage() {
                                           entry.version
                                         );
                                       }}
-                                      className="h-6 w-6 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                                      className="h-6 w-6 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
                                     >
                                       <Trash2 className="w-3 h-3" />
                                     </Button>
                                   </div>
                                   <div className="grid grid-cols-3 gap-2 text-xs mb-2">
                                     <div>
-                                      <span className="text-gray-400">
+                                      <span className="text-muted-foreground">
                                         개발:{" "}
                                       </span>
-                                      <span className="text-white">
+                                      <span className="text-foreground">
                                         {new Date(
                                           entry.dev_end_date
                                         ).toLocaleDateString("ko-KR")}
                                       </span>
                                     </div>
                                     <div>
-                                      <span className="text-gray-400">
+                                      <span className="text-muted-foreground">
                                         QA:{" "}
                                       </span>
-                                      <span className="text-white">
+                                      <span className="text-foreground">
                                         {new Date(
                                           entry.qa_end_date
                                         ).toLocaleDateString("ko-KR")}
                                       </span>
                                     </div>
                                     <div>
-                                      <span className="text-gray-400">
+                                      <span className="text-muted-foreground">
                                         릴리즈:{" "}
                                       </span>
-                                      <span className="text-white">
+                                      <span className="text-foreground">
                                         {new Date(
                                           entry.release_date
                                         ).toLocaleDateString("ko-KR")}
@@ -521,7 +516,7 @@ export default function AdminPage() {
                                     </div>
                                   </div>
                                   {entry.change_note && (
-                                    <p className="text-sm text-gray-300 mt-2 p-2 bg-white/5 rounded">
+                                    <p className="text-sm text-foreground mt-2 p-2 bg-muted/50 rounded">
                                       {entry.change_note}
                                     </p>
                                   )}
@@ -530,7 +525,7 @@ export default function AdminPage() {
                             ))}
                           </div>
                         ) : (
-                          <div className="text-gray-400 text-sm">
+                          <div className="text-muted-foreground text-sm">
                             변경 이력이 없습니다.
                           </div>
                         )}
@@ -544,12 +539,12 @@ export default function AdminPage() {
         </div>
 
         {selectedVersion && (
-          <Card className="bg-white/5 border-white/10">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-white">
+              <CardTitle className="text-foreground">
                 {selectedVersion.isNewVersion ? "새 버전 추가" : "일정 수정"}
               </CardTitle>
-              <CardDescription className="text-gray-400">
+              <CardDescription className="text-muted-foreground">
                 {selectedVersion.isNewVersion
                   ? "새로운 버전의 일정을 입력하세요"
                   : "선택한 버전의 일정을 수정하세요"}
@@ -559,18 +554,18 @@ export default function AdminPage() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="product_name" className="text-white">
+                    <Label htmlFor="product_name" className="text-foreground">
                       제품명
                     </Label>
                     <Input
                       id="product_name"
                       value={formData.product_name}
                       disabled
-                      className="bg-white/5 border-white/10 text-white"
+                      className="bg-muted border-border text-foreground"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="version" className="text-white">
+                    <Label htmlFor="version" className="text-foreground">
                       버전
                     </Label>
                     <Input
@@ -580,11 +575,11 @@ export default function AdminPage() {
                         setFormData({ ...formData, version: e.target.value })
                       }
                       placeholder="예: 1.0.0"
-                      className="bg-white/5 border-white/10 text-white"
+                      className="bg-background border-border text-foreground"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="dev_end_date" className="text-white">
+                    <Label htmlFor="dev_end_date" className="text-foreground">
                       개발 종료일
                     </Label>
                     <DatePicker
@@ -594,7 +589,7 @@ export default function AdminPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="qa_end_date" className="text-white">
+                    <Label htmlFor="qa_end_date" className="text-foreground">
                       QA 종료일
                     </Label>
                     <DatePicker
@@ -604,7 +599,7 @@ export default function AdminPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="release_date" className="text-white">
+                    <Label htmlFor="release_date" className="text-foreground">
                       최종 릴리즈일
                     </Label>
                     <DatePicker
@@ -615,7 +610,7 @@ export default function AdminPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="change_note" className="text-white">
+                  <Label htmlFor="change_note" className="text-foreground">
                     변경 사항 메모 (선택사항)
                   </Label>
                   <Textarea
@@ -625,12 +620,12 @@ export default function AdminPage() {
                       setFormData({ ...formData, change_note: e.target.value })
                     }
                     placeholder="이번 업데이트의 변경 사항을 기록하세요"
-                    className="bg-white/5 border-white/10 text-white"
+                    className="bg-background border-border text-foreground"
                     rows={3}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="release_notes" className="text-white">
+                  <Label htmlFor="release_notes" className="text-foreground">
                     릴리즈 노트 (전광판에 표시됨)
                   </Label>
                   <Textarea
@@ -643,15 +638,12 @@ export default function AdminPage() {
                       })
                     }
                     placeholder="이번 버전에 포함된 주요 기능과 변경사항을 입력하세요"
-                    className="bg-white/5 border-white/10 text-white"
+                    className="bg-background border-border text-foreground"
                     rows={4}
                   />
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    type="submit"
-                    className="bg-white text-black hover:bg-gray-200"
-                  >
+                  <Button type="submit">
                     <Save className="w-4 h-4 mr-2" />
                     저장
                   </Button>
@@ -659,7 +651,6 @@ export default function AdminPage() {
                     type="button"
                     variant="outline"
                     onClick={handleCancel}
-                    className="bg-white/5 border-white/10 hover:bg-white/10"
                   >
                     취소
                   </Button>
