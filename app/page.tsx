@@ -52,12 +52,19 @@ export default async function Home() {
                 제품 개발 및 릴리즈 일정 현황판
               </p>
             </div>
-            <Link href="/admin">
-              <Button variant="outline" className="gap-2 bg-transparent">
-                <Settings className="h-4 w-4" />
-                관리
-              </Button>
-            </Link>
+            <div className="flex gap-2">
+              <Link href="/customer-modules">
+                <Button variant="outline" className="gap-2 bg-transparent">
+                  고객사 관리
+                </Button>
+              </Link>
+              <Link href="/admin">
+                <Button variant="outline" className="gap-2 bg-transparent">
+                  <Settings className="h-4 w-4" />
+                  관리
+                </Button>
+              </Link>
+            </div>
           </div>
         </header>
 

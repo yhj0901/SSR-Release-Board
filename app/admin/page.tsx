@@ -375,9 +375,14 @@ export default function AdminPage() {
               제품 릴리즈 일정을 관리합니다
             </p>
           </div>
-          <Link href="/">
-            <Button variant="outline">전광판 보기</Button>
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/customer-modules">
+              <Button variant="outline">고객사 관리</Button>
+            </Link>
+            <Link href="/">
+              <Button variant="outline">전광판 보기</Button>
+            </Link>
+          </div>
         </div>
 
         <div className="space-y-4">
