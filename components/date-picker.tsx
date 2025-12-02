@@ -1,27 +1,35 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { cn } from "@/lib/utils"
+import type React from "react";
+import { cn } from "@/lib/utils";
 
 interface DatePickerProps {
-  date?: Date
-  onDateChange: (date: Date | undefined) => void
-  placeholder?: string
-  className?: string
+  date?: Date;
+  onDateChange: (date: Date | undefined) => void;
+  placeholder?: string;
+  className?: string;
 }
 
-export function DatePicker({ date, onDateChange, placeholder = "날짜 선택", className }: DatePickerProps) {
+export function DatePicker({
+  date,
+  onDateChange,
+  placeholder = "날짜 선택",
+  className,
+}: DatePickerProps) {
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    console.log("[v0] Date input changed:", value)
+    const value = e.target.value;
+    console.log("[DatePicker] Date input changed:", value);
     if (value) {
-      onDateChange(new Date(value))
+      // Create date at local timezone
+      const selectedDate = new Date(value + "T00:00:00");
+      console.log("[DatePicker] Selected date:", selectedDate);
+      onDateChange(selectedDate);
     } else {
-      onDateChange(undefined)
+      onDateChange(undefined);
     }
-  }
+  };
 
-  const dateValue = date ? date.toISOString().split("T")[0] : ""
+  const dateValue = date ? date.toISOString().split("T")[0] : "";
 
   return (
     <div className={cn("relative w-full", className)}>
@@ -31,21 +39,17 @@ export function DatePicker({ date, onDateChange, placeholder = "날짜 선택", 
         onChange={handleDateChange}
         placeholder={placeholder}
         className={cn(
-          "w-full px-4 py-2.5 rounded-md border",
-          "bg-white/10 border-white/20 text-white",
-          "hover:bg-white/15 hover:border-white/30",
-          "focus:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/40 focus:border-white/40",
+          "w-full h-10 px-3 py-2 rounded-md border text-sm",
+          "bg-background border-border text-foreground",
+          "hover:bg-muted/50",
+          "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
           "cursor-pointer transition-colors",
-          "[color-scheme:dark]",
-          // Style the calendar picker indicator
+          "disabled:cursor-not-allowed disabled:opacity-50",
           "[&::-webkit-calendar-picker-indicator]:opacity-100",
           "[&::-webkit-calendar-picker-indicator]:cursor-pointer",
-          "[&::-webkit-calendar-picker-indicator]:brightness-200",
-          "[&::-webkit-calendar-picker-indicator]:scale-110",
-          // Style for when no date is selected
-          !date && "text-gray-400",
+          !date && "text-muted-foreground"
         )}
       />
     </div>
-  )
+  );
 }
